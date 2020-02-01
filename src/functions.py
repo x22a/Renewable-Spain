@@ -21,8 +21,8 @@ def dateTo(dataframe):
         index += 1
     
     dataframe.insert(0, "Year", Year) 
-    dataframe.insert(0, "Day", Day) 
     dataframe.insert(0, "Month", Month) 
+    dataframe.insert(0, "Day", Day) 
     dataframe.insert(0, "Hour", Hour) 
 
     #Pendiente quitar la columna MTU
@@ -48,3 +48,10 @@ def dateTo(dataframe):
     dataframe = dataframe.rename(columns=newNames, errors="raise")
 
     return dataframe
+
+
+def getDateInfo(day, month, year, dataframe):
+    answer = dataframe.loc[(dataframe['Year'] == year)]
+    answer = answer.loc[(answer['Month'] == month)]
+    answer = answer.loc[(answer['Day'] == day)]
+    return answer
