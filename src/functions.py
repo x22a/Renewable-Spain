@@ -1,5 +1,11 @@
 import re
 import pandas as pd
+import json
+import requests
+import os
+from dotenv import load_dotenv
+
+# Extract data from dates column ----> Day, Month, Year, Hour and create new columns
 
 def dateTo(dataframe):
     dataframe = dataframe.drop(["Area", "Fossil Coal-derived gas  - Actual Aggregated [MW]", "Fossil Oil shale  - Actual Aggregated [MW]", "Fossil Peat  - Actual Aggregated [MW]", "Geothermal  - Actual Aggregated [MW]", "Hydro Pumped Storage  - Actual Aggregated [MW]", "Marine  - Actual Aggregated [MW]", "Wind Offshore  - Actual Aggregated [MW]"], axis=1)
@@ -25,7 +31,6 @@ def dateTo(dataframe):
     dataframe.insert(0, "Day", Day) 
     dataframe.insert(0, "Hour", Hour) 
 
-    #Pendiente quitar la columna MTU
     dataframe = dataframe.drop(["MTU"], axis=1)
 
     newNames = {
@@ -49,9 +54,29 @@ def dateTo(dataframe):
 
     return dataframe
 
+# Extact the information from the desired day and create new DataFrame
 
 def getDateInfo(day, month, year, dataframe):
     answer = dataframe.loc[(dataframe['Year'] == year)]
     answer = answer.loc[(answer['Month'] == month)]
     answer = answer.loc[(answer['Day'] == day)]
     return answer
+
+# Get the information from Aemet of the desired day
+
+def requestAemet(day, month, year):
+    token = os.getenv("AEMET_API_KEY")
+    nextDay = str(int(day) + 1)
+    if not token:
+        raise ValueError("You must set a AEMET_API_KEY token")
+    
+    baseUrl = "https://api.github.com"
+    headers = {
+        'Accept': 'application/json',
+        'api_key': f'{token}',
+    }
+    res = requests.get(f'https://opendata.aemet.es/opendata/api/valores/climatologicos/diarios/datos/fechaini/{year}-{month}-{day}T00%3A00%3A01UTC/fechafin/{year}-{month}-{nextDay}T00%3A00%3A00UTC/todasestaciones', headers=headers)
+    if res.status_code != 200:
+        print(res.text)
+        raise ValueError("Bad Response")
+    return res.json()
