@@ -1,5 +1,6 @@
 import re
 import pandas as pd
+import numpy as np
 import json
 import requests
 import os
@@ -153,7 +154,7 @@ def requestAemet(day, month, year, dataframe = pd.read_csv("./output/clean-datas
 def piePlotter(requestElem):
     windPercent = requestElem[1][2]
     totalPercent = requestElem[1][3]
-    labels = ['Wind Generated', 'Other Technologies Generated']
+    labels = ['Wind Generated', 'Other Technologies']
     sizes = [windPercent, totalPercent]
     colors = ["dodgerblue", "darkorange"]
     explode = (0.15, 0)
@@ -164,18 +165,84 @@ def piePlotter(requestElem):
     plt.savefig('./output/pie.png')
     pass
 
+def barPlotter(requestElem):
+    labels = ["MWh/day"]
+    windEnergy = [requestElem[1][0]]
+    totalEnergy = [requestElem[1][1]]
+
+    x = np.arange(len(labels))  # the label locations
+    width = 0.35  # the width of the bars
+
+    fig, ax = plt.subplots()
+    rects1 = ax.bar(x - width/2, windEnergy, width, label='Wind')
+    rects2 = ax.bar(x + width/2, totalEnergy, width, label='Other')
+
+    # Add some text for labels, title and custom x-axis tick labels, etc.
+    ax.set_ylabel('Total MWH/day')
+    ax.set_title('MWh/day by technologies')
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.legend()
+
+
+    def autolabel(rects):
+        """Attach a text label above each bar in *rects*, displaying its height."""
+        for rect in rects:
+            height = rect.get_height()
+            ax.annotate('{}'.format(height),
+                        xy=(rect.get_x() + rect.get_width() / 2, height),
+                        xytext=(0, 3),  # 3 points vertical offset
+                        textcoords="offset points",
+                        ha='center', va='bottom')
+
+
+    autolabel(rects1)
+    autolabel(rects2)
+
+    fig.tight_layout()
+
+    plt.savefig('./output/bar.png')
+    pass
+
+
+
 def createPDF(day, month, year):
+    numToMonth = {
+        "01": "January",
+        "02": "February",
+        "03": "March",
+        "04": "April",
+        "05": "May",
+        "06": "June",
+        "07": "July",
+        "08": "August",
+        "09": "September",
+        "10": "October",
+        "11": "November",
+        "12": "December"
+    }
+    monthName = numToMonth[month]
     element = requestAemet(day, month, year)[0:2]
     dataframe = requestAemet(day, month, year)[2]
     piePlotter(element)
+    barPlotter(element)
     pdf = FPDF('P','mm','A4')
+
+
 
     # Add page
     pdf.add_page()
-    
-    pdf.image("./output/pie.png", 10, 10, h=50)
+    pdf.set_font('Arial', 'B', 16)
+    pdf.cell(190, 10, f'Report of {day}-{monthName}-{year}',0,1,'C')
+    pdf.cell(190, 20, f"The average wind speed was {element[0]} m/s", 0,1,'C')
+    pdf.image("./output/pie.png", 50, 40, h= 80)
+    pdf.set_font('Arial', 'B', 14)
+    pdf.cell(190, 185, "Percentage of wind production from total",0,1,'C')
+    pdf.image("./output/bar.png", 50, 140, h= 80)
+    pdf.cell(190, 15, "Wind VS Total production in MWh/day",0,1,'C')
 
     pdf.add_page(orientation = 'L')
+    pdf.cell(277, 20, "Production by hour all technologies",0,1,'C')
     dataframe
     # Defining parameters
     num_col = len(dataframe.columns)
@@ -191,11 +258,12 @@ def createPDF(day, month, year):
     pdf.set_fill_color(255,255,255)
     font_type = ('Arial', '', 8)
     pdf.set_font(*font_type)
+    
     # iteration rows
     for _,row in dataframe.iterrows():
         # iterating columns
         for value in dataframe.columns:
-            pdf.cell(w/num_col,10,row[value],1,0,'C',1)
+            pdf.cell(w/num_col,10, row[value],1,0,'C',1)
         pdf.ln()
     pdf.output("./output/report.pdf",'F')
 
@@ -211,6 +279,7 @@ def parser(*args):
     month = args.Month
     year = args.Year
     return day, month, year
+
 
 
 
