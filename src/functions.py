@@ -205,19 +205,17 @@ def parser(*args):
     parser.add_argument('Day', type = str, help = 'Day --> DD')
     parser.add_argument('Month', type = str, help = 'Month --> MM')
     parser.add_argument('Year', type = str, help = 'Year --> YYYY')
-    parser.add_argument('Receiver', type = str, help = 'Receiver mail')
     args = parser.parse_args()
 
     day = args.Day
     month = args.Month
     year = args.Year
-    receiver = args.Receiver
-    return day, month, year, receiver
+    return day, month, year
 
 
 
-def sendReport(day, month, year, receiver):
-
+def sendReport(day, month, year):
+    receiver = input('To whom we send the report? ')
     createPDF(day, month, year)
     subject = f"Report of {day}-{month}-{year}"
     body = f"In this report of {day}-{month}-{year}, you can find the information you asked"
