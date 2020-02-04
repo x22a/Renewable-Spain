@@ -2,8 +2,6 @@
 
 Create a report showing the percentage, the energy and the average wind speed in Spain for the selected day.
 
-![Background](./input/background.HEIC?raw=true)
-
 ## Data
 
 The dataset was created using the information available in https://transparency.entsoe.eu/ 
