@@ -2,7 +2,7 @@
 
 Create a report showing the percentage, the energy and the average wind speed in Spain for the selected day.
 
-![Background](./input/background.HEIC)
+![Background](./input/background.HEIC?raw=true)
 
 ## Data
 
